@@ -1,0 +1,17 @@
+.vibecli/
+.env
+.env.*
+*.pem
+*.key
+id_rsa
+id_ed25519
+node_modules/
+coverage/
+.pnpm-data/
+.pnpm-cache/
+.DS_Store
+*.log
+*.tgz
+src/
+dist/**/__tests__/
+dist/**/*.test.*

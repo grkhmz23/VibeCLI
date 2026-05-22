@@ -1,0 +1,17 @@
+node_modules/
+dist/
+coverage/
+.pnpm-data/
+.pnpm-cache/
+.npm-cache/
+.vibecli/
+.vibecli/runs/
+.vibecli/keys/
+.vibecli/org/keys/
+.vibecli/org/**/*.private.pem
+.vibecli/evidence-archive/
+.vibecli/evidence-lifecycle/**/*.private.pem
+.env
+*.private.pem
+*.log
+*.tgz

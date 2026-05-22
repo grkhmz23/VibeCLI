@@ -17,6 +17,9 @@ export function parseConsoleCommand(input) {
     const trimmed = input.trim();
     if (!trimmed)
         return { type: "unknown", message: "Enter a request or /help." };
+    if (/^vibe(?:\s|$)/.test(trimmed)) {
+        return { type: "cli-command-inside-console", input: trimmed };
+    }
     if (!trimmed.startsWith("/"))
         return { type: "plain", prompt: trimmed };
     const parts = tokens(trimmed);
@@ -24,6 +27,8 @@ export function parseConsoleCommand(input) {
     switch (command) {
         case "help":
             return { type: "help" };
+        case "init":
+            return { type: "init" };
         case "exit":
         case "quit":
             return { type: "exit" };

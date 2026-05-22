@@ -534,6 +534,11 @@ export type ConsoleCommand = {
     trialId?: string;
     json: boolean;
 } | {
+    type: "init";
+} | {
+    type: "cli-command-inside-console";
+    input: string;
+} | {
     type: "doctor";
 } | {
     type: "clear";

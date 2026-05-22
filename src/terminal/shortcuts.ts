@@ -375,6 +375,8 @@ export type ConsoleCommand =
       trialId?: string;
       json: boolean;
     }
+  | { type: "init" }
+  | { type: "cli-command-inside-console"; input: string }
   | { type: "doctor" }
   | { type: "clear" }
   | { type: "plain"; prompt: string }
@@ -403,12 +405,17 @@ function isAgentRole(value: string | undefined): value is AgentRoleId {
 export function parseConsoleCommand(input: string): ConsoleCommand {
   const trimmed = input.trim();
   if (!trimmed) return { type: "unknown", message: "Enter a request or /help." };
+  if (/^vibe(?:\s|$)/.test(trimmed)) {
+    return { type: "cli-command-inside-console", input: trimmed };
+  }
   if (!trimmed.startsWith("/")) return { type: "plain", prompt: trimmed };
   const parts = tokens(trimmed);
   const command = parts[0]?.slice(1);
   switch (command) {
     case "help":
       return { type: "help" };
+    case "init":
+      return { type: "init" };
     case "exit":
     case "quit":
       return { type: "exit" };

@@ -53,6 +53,12 @@ export async function loadConfig(cwd) {
     const parsed = YAML.parse(await readFile(fullPath, "utf8"));
     return configSchema.parse(parsed);
 }
+export function hasConfig(cwd) {
+    return pathExists(join(cwd, configPath));
+}
+export async function loadConfigIfExists(cwd) {
+    return hasConfig(cwd) ? loadConfig(cwd) : null;
+}
 export async function saveConfig(cwd, config) {
     const parsed = configSchema.parse(config);
     await writeFile(join(cwd, configPath), stringifyYaml(parsed), "utf8");

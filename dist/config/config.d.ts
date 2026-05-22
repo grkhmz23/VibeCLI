@@ -6,5 +6,7 @@ export declare const runsPath: string;
 export declare function stringifyYaml(value: unknown): string;
 export declare function initConfig(cwd: string, force?: boolean): Promise<void>;
 export declare function loadConfig(cwd: string): Promise<VibeConfig>;
+export declare function hasConfig(cwd: string): boolean;
+export declare function loadConfigIfExists(cwd: string): Promise<VibeConfig | null>;
 export declare function saveConfig(cwd: string, config: VibeConfig): Promise<void>;
 export declare function loadSecurityPolicy(cwd: string): Promise<Record<string, boolean>>;

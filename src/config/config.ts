@@ -61,6 +61,14 @@ export async function loadConfig(cwd: string): Promise<VibeConfig> {
   return configSchema.parse(parsed);
 }
 
+export function hasConfig(cwd: string): boolean {
+  return pathExists(join(cwd, configPath));
+}
+
+export async function loadConfigIfExists(cwd: string): Promise<VibeConfig | null> {
+  return hasConfig(cwd) ? loadConfig(cwd) : null;
+}
+
 export async function saveConfig(cwd: string, config: VibeConfig): Promise<void> {
   const parsed = configSchema.parse(config);
   await writeFile(join(cwd, configPath), stringifyYaml(parsed), "utf8");

@@ -1,8 +1,8 @@
-import { mkdtemp } from "node:fs/promises";
+import { mkdtemp, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { initConfig } from "../config/config.js";
+import { configPath, initConfig } from "../config/config.js";
 import { executePhaseOneWorkflow } from "../orchestrator/workflow.js";
 import { parseConsoleCommand } from "../terminal/shortcuts.js";
 import { createTheme } from "../terminal/theme.js";
@@ -12,12 +12,27 @@ import {
   renderInputFrame,
   renderLogo
 } from "../terminal/render.js";
-import { executeConsoleCommand, watchRunSnapshots } from "../terminal/console.js";
+import {
+  executeConsoleCommand,
+  isConsoleAbortError,
+  runConsole,
+  watchRunSnapshots
+} from "../terminal/console.js";
+import { pathExists } from "../utils/fs.js";
 
 async function repo(): Promise<string> {
   const cwd = await mkdtemp(join(tmpdir(), "vibecli-terminal-"));
   await initConfig(cwd);
   return cwd;
+}
+
+async function noConfigRepo(): Promise<string> {
+  return mkdtemp(join(tmpdir(), "vibecli-terminal-no-config-"));
+}
+
+async function runCount(cwd: string): Promise<number> {
+  const runsPath = join(cwd, ".vibecli", "runs");
+  return pathExists(runsPath) ? (await readdir(runsPath)).length : 0;
 }
 
 const originalFetch = globalThis.fetch;
@@ -94,6 +109,11 @@ describe("console parser", () => {
     ["/review run-1 --diff", "review"],
     ['/apply run-1 --confirm "APPLY run-1"', "apply"],
     ['/rollback run-1 --confirm "ROLLBACK run-1"', "rollback"],
+    ["/init", "init"],
+    ["vibe init", "cli-command-inside-console"],
+    ["vibe console", "cli-command-inside-console"],
+    ['vibe run "x"', "cli-command-inside-console"],
+    ["vibe status", "cli-command-inside-console"],
     ["Add password reset flow", "plain"]
   ])("parses %s", (input, type) => {
     expect(parseConsoleCommand(input).type).toBe(type);
@@ -158,6 +178,84 @@ describe("console safety and watch", () => {
     );
     expect(output).toContain("completed");
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("no-config console startup renders first-run state without throwing", async () => {
+    const cwd = await noConfigRepo();
+    const logs: string[] = [];
+    const logSpy = vi.spyOn(console, "log").mockImplementation((value?: unknown) => {
+      logs.push(String(value));
+    });
+    await runConsole(cwd, { inputLines: ["/help", "/exit"] });
+    logSpy.mockRestore();
+    const output = logs.join("\n");
+    expect(output).toContain("Config: not initialized");
+    expect(output).toContain("This directory is not initialized for VibeCLI.");
+    expect(output).toContain("/init");
+  });
+
+  it("/init creates config from no-config console mode", async () => {
+    const cwd = await noConfigRepo();
+    const output = await executeConsoleCommand(
+      { type: "init" },
+      { cwd, mode: "dry-run", stream: false, theme: createTheme({ color: false }) }
+    );
+    expect(output).toContain("Initialized VibeCLI");
+    expect(pathExists(join(cwd, configPath))).toBe(true);
+  });
+
+  it("safe console commands work before init and config-required commands are blocked", async () => {
+    const cwd = await noConfigRepo();
+    const context = {
+      cwd,
+      mode: "dry-run" as const,
+      stream: false,
+      theme: createTheme({ color: false })
+    };
+    await expect(executeConsoleCommand({ type: "help" }, context)).resolves.toContain(
+      "Console commands"
+    );
+    await expect(executeConsoleCommand({ type: "doctor" }, context)).resolves.toContain(
+      "not initialized"
+    );
+    await expect(
+      executeConsoleCommand({ type: "plain", prompt: "Build auth" }, context)
+    ).resolves.toBe("Initialize this directory first: /init");
+    await expect(executeConsoleCommand({ type: "status" }, context)).resolves.toContain(
+      "requires VibeCLI initialization"
+    );
+    expect(await runCount(cwd)).toBe(0);
+  });
+
+  it("CLI-looking input inside console returns guidance and does not create runs", async () => {
+    const cwd = await repo();
+    const context = {
+      cwd,
+      mode: "dry-run" as const,
+      stream: false,
+      theme: createTheme({ color: false })
+    };
+    await expect(
+      executeConsoleCommand(parseConsoleCommand("vibe init"), context)
+    ).resolves.toContain("Use `/init`");
+    await expect(
+      executeConsoleCommand(parseConsoleCommand("vibe console"), context)
+    ).resolves.toContain("already inside");
+    await expect(
+      executeConsoleCommand(parseConsoleCommand("vibe run test"), context)
+    ).resolves.toContain("use /run test");
+    await expect(
+      executeConsoleCommand(parseConsoleCommand("vibe status"), context)
+    ).resolves.toContain("use `/status`");
+    expect(await runCount(cwd)).toBe(0);
+  });
+
+  it("detects readline Ctrl+C aborts for clean console exit handling", () => {
+    const error = Object.assign(new Error("Aborted with Ctrl+C"), {
+      name: "AbortError",
+      code: "ABORT_ERR"
+    });
+    expect(isConsoleAbortError(error)).toBe(true);
   });
 
   it("status watch reads run state repeatedly using bounded watcher", async () => {

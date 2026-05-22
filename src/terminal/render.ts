@@ -149,6 +149,7 @@ export function renderHelp(): string {
   return [
     "Console commands:",
     "/help",
+    "/init",
     "/exit, /quit",
     "/status [run-id]",
     "/watch <run-id>",

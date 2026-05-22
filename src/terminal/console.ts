@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { loadConfig } from "../config/config.js";
+import { hasConfig, initConfig, loadConfig } from "../config/config.js";
 import { createProviderRegistry } from "../providers/registry.js";
 import { executePhaseOneWorkflow, executePhaseTwoLiveWorkflow } from "../orchestrator/workflow.js";
 import { RunStore } from "../orchestrator/run-store.js";
@@ -181,6 +181,64 @@ type ConsoleContext = {
   theme: Theme;
 };
 
+const initRequiredMessage =
+  "This command requires VibeCLI initialization. Run /init or vibe init first.";
+
+function firstRunMessage(): string {
+  return [
+    "This directory is not initialized for VibeCLI.",
+    "Next actions:",
+    "Run `vibe init` or type `/init` in this console.",
+    "",
+    "Safe commands:",
+    "/init",
+    "/help",
+    "/doctor",
+    "/exit"
+  ].join("\n");
+}
+
+function cliCommandGuidance(input: string): string {
+  const parts = input.trim().split(/\s+/);
+  const command = parts[1];
+  if (command === "init") {
+    return "You are already inside the VibeCLI console. Use `/init` here, or exit and run `vibe init` in your shell.";
+  }
+  if (command === "console" || command === "chat" || command === undefined) {
+    return "You are already inside the VibeCLI console. Use `/help` for console commands or `/exit` to leave.";
+  }
+  if (command === "run") {
+    const prompt = input.replace(/^vibe\s+run\s*/, "").trim();
+    return `Inside the console, use /run${prompt ? ` ${prompt}` : ""} instead of \`vibe run ...\`.`;
+  }
+  if (command === "status") {
+    return "Inside the console, use `/status`.";
+  }
+  if (command === "doctor") {
+    return "Inside the console, use `/doctor`.";
+  }
+  return "Shell commands are not executed inside the VibeCLI console. Use slash commands such as `/run`, `/status`, `/doctor`, or `/exit`.";
+}
+
+function commandRequiresConfig(command: ConsoleCommand): boolean {
+  return ![
+    "help",
+    "exit",
+    "init",
+    "doctor",
+    "clear",
+    "cli-command-inside-console",
+    "unknown"
+  ].includes(command.type);
+}
+
+export function isConsoleAbortError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    (error.name === "AbortError" || (error as Error & { code?: string }).code === "ABORT_ERR")
+  );
+}
+
 async function branch(cwd: string): Promise<string | null> {
   if (!(await hasGit())) return null;
   const { execFile } = await import("node:child_process");
@@ -203,6 +261,26 @@ async function history(cwd: string, entry: object): Promise<void> {
 }
 
 async function startupHeader(context: ConsoleContext): Promise<string> {
+  if (!hasConfig(context.cwd)) {
+    return [
+      renderHeader(
+        {
+          repoPath: context.cwd,
+          profile: "not initialized",
+          policy: "not loaded",
+          routingStrategy: "unavailable",
+          budgetSummary: "unavailable",
+          configStatus: "not initialized",
+          providers: [],
+          branch: await branch(context.cwd),
+          dogfood: await readDogfoodState(context.cwd),
+          beta: await readBetaState(context.cwd)
+        },
+        context.theme
+      ),
+      firstRunMessage()
+    ].join("\n");
+  }
   const config = await loadConfig(context.cwd);
   const latestRunId = await new RunStore(context.cwd).latestRunId();
   const latestRun = latestRunId
@@ -326,11 +404,21 @@ export async function executeConsoleCommand(
   command: ConsoleCommand,
   context: ConsoleContext
 ): Promise<string> {
+  if (!hasConfig(context.cwd)) {
+    if (command.type === "plain") return "Initialize this directory first: /init";
+    if (commandRequiresConfig(command)) return initRequiredMessage;
+  }
   switch (command.type) {
     case "help":
       return renderHelp();
     case "exit":
       return "__EXIT__";
+    case "init":
+      if (hasConfig(context.cwd)) return "VibeCLI is already initialized in this directory.";
+      await initConfig(context.cwd);
+      return ["Initialized VibeCLI in .vibecli/", await startupHeader(context)].join("\n");
+    case "cli-command-inside-console":
+      return cliCommandGuidance(command.input);
     case "status":
       return command.watch ? watchRun(context, command.runId) : statusText(context, command.runId);
     case "run":
@@ -1445,7 +1533,16 @@ export async function runConsole(
   const rl = createConsoleReadline();
   try {
     for (;;) {
-      const line = await rl.question("> ");
+      let line: string;
+      try {
+        line = await rl.question("> ");
+      } catch (error) {
+        if (isConsoleAbortError(error)) {
+          console.log("Exiting VibeCLI console.");
+          break;
+        }
+        throw error;
+      }
       try {
         const result = await executeConsoleCommand(parseConsoleCommand(line), context);
         if (result === "__EXIT__") break;

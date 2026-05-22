@@ -8,6 +8,7 @@ type ConsoleContext = {
     policy?: string;
     theme: Theme;
 };
+export declare function isConsoleAbortError(error: unknown): boolean;
 export declare function watchRunSnapshots(context: ConsoleContext, runId?: string, options?: {
     iterations?: number;
     intervalMs?: number;

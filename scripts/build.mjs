@@ -28,9 +28,9 @@ if (!existsSync(tscBin)) {
     "--",
     "tsc",
     "-p",
-    "tsconfig.json"
+    "tsconfig.build.json"
   ]);
 } else {
-  run(process.execPath, [tscBin, "-p", "tsconfig.json"]);
+  run(process.execPath, [tscBin, "-p", "tsconfig.build.json"]);
 }
 chmodSync(distBin, 0o755);

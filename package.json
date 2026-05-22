@@ -26,6 +26,7 @@
     "vibe": "tsx src/index.ts",
     "package-check": "tsx src/index.ts package-check",
     "package-install-check": "tsx src/index.ts package-install-check",
+    "prepare": "node scripts/prepare-git-install.mjs",
     "prepack": "npm run build"
   },
   "engines": {

@@ -8,6 +8,7 @@ import {
   renameSync,
   rmSync
 } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { basename, dirname, join, resolve } from "node:path";
 
 const packageName = "vibecli";
@@ -67,3 +68,17 @@ cpSync(root, stagingPath, {
 });
 rmSync(globalPackagePath, { force: true });
 renameSync(stagingPath, globalPackagePath);
+
+const result = spawnSync(
+  "npm",
+  ["install", "--omit=dev", "--ignore-scripts", "--no-audit", "--no-fund", "--package-lock=false"],
+  {
+    cwd: globalPackagePath,
+    stdio: "inherit",
+    shell: false
+  }
+);
+
+if (result.status !== 0) {
+  process.exit(result.status ?? 1);
+}

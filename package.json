@@ -16,6 +16,8 @@
     "SECURITY.md",
     "LICENSE",
     "docs/",
+    "scripts/prepare-git-install.mjs",
+    "scripts/postinstall-git-global.mjs",
     "package.json"
   ],
   "scripts": {
@@ -27,6 +29,7 @@
     "package-check": "tsx src/index.ts package-check",
     "package-install-check": "tsx src/index.ts package-install-check",
     "prepare": "node scripts/prepare-git-install.mjs",
+    "postinstall": "node scripts/postinstall-git-global.mjs",
     "prepack": "npm run build"
   },
   "engines": {

@@ -1,0 +1,1 @@
+{"version":3,"file":"events.js","sourceRoot":"","sources":["../../src/ledger/events.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,mBAAmB,EAAE,MAAM,eAAe,CAAC;AAEpD,MAAM,CAAC,KAAK,UAAU,2BAA2B,CAAC,GAAW,EAAE,KAAa;IAC1E,MAAM,mBAAmB,CAAC,GAAG,EAAE,KAAK,CAAC,CAAC;AACxC,CAAC"}

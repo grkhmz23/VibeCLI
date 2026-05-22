@@ -1,0 +1,7 @@
+dist/
+node_modules/
+coverage/
+.vibecli/
+.pnpm-cache/
+.pnpm-data/
+.npm-cache/

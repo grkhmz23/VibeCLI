@@ -1,0 +1,18 @@
+import { evaluateDeploymentReadiness } from "../release/deployment-readiness.js";
+export function registerDeploymentReadinessCommand(program) {
+    const configure = (command) => {
+        command
+            .argument("<run-id>", "run id")
+            .option("--channel <channel>", "release channel")
+            .option("--json", "print JSON")
+            .action(async (runId, options) => {
+            const result = await evaluateDeploymentReadiness(process.cwd(), runId, {
+                channel: options.channel
+            });
+            console.log(options.json ? JSON.stringify(result, null, 2) : JSON.stringify(result, null, 2));
+        });
+    };
+    configure(program.command("deployment-readiness").description("Generate deployment-readiness report"));
+    configure(program.command("deploy-readiness").description("Alias for deployment-readiness"));
+}
+//# sourceMappingURL=deployment-readiness.js.map

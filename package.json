@@ -19,14 +19,13 @@
     "package.json"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json && chmod +x dist/index.js",
+    "build": "node scripts/build.mjs",
     "test": "vitest run",
     "lint": "eslint .",
     "format": "prettier --write .",
     "vibe": "tsx src/index.ts",
     "package-check": "tsx src/index.ts package-check",
     "package-install-check": "tsx src/index.ts package-install-check",
-    "prepare": "npm run build",
     "prepack": "npm run build"
   },
   "engines": {

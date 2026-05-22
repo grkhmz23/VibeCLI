@@ -1,0 +1,1 @@
+{"version":3,"file":"capabilities.js","sourceRoot":"","sources":["../../src/models/capabilities.ts"],"names":[],"mappings":"AAUA,MAAM,CAAC,MAAM,mBAAmB,GAAsB;IACpD,iBAAiB,EAAE,SAAS;IAC5B,gBAAgB,EAAE,SAAS;IAC3B,aAAa,EAAE,SAAS;IACxB,cAAc,EAAE,SAAS;IACzB,aAAa,EAAE,IAAI;IACnB,QAAQ,EAAE,SAAS;IACnB,WAAW,EAAE,SAAS;CACvB,CAAC"}

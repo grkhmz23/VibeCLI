@@ -1,0 +1,10 @@
+import { type VibeConfig } from "./schema.js";
+export declare const vibeDir = ".vibecli";
+export declare const configPath: string;
+export declare const securityPolicyPath: string;
+export declare const runsPath: string;
+export declare function stringifyYaml(value: unknown): string;
+export declare function initConfig(cwd: string, force?: boolean): Promise<void>;
+export declare function loadConfig(cwd: string): Promise<VibeConfig>;
+export declare function saveConfig(cwd: string, config: VibeConfig): Promise<void>;
+export declare function loadSecurityPolicy(cwd: string): Promise<Record<string, boolean>>;

@@ -1,0 +1,1 @@
+{"version":3,"file":"security-policy.js","sourceRoot":"","sources":["../../src/policies/security-policy.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,sBAAsB,EAAE,MAAM,uBAAuB,CAAC;AAE/D,MAAM,CAAC,MAAM,sBAAsB,GAAG,sBAAsB,CAAC;AAE7D,MAAM,UAAU,0BAA0B;IACxC,OAAO,MAAM,CAAC,IAAI,CAAC,sBAAsB,CAAC,CAAC;AAC7C,CAAC"}

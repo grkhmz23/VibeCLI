@@ -1,0 +1,20 @@
+import type { VibeConfig } from "./schema.js";
+export declare const defaultConfig: VibeConfig;
+export declare const requiredSecurityPolicy: {
+    readonly require_no_secrets_in_source: true;
+    readonly require_env_example_for_new_env_vars: true;
+    readonly require_rate_limit_for_auth_routes: true;
+    readonly require_authz_for_user_data_routes: true;
+    readonly require_input_validation_for_api_routes: true;
+    readonly require_safe_error_handling: true;
+    readonly require_safe_logging: true;
+    readonly require_no_private_api_calls_from_frontend: true;
+    readonly require_jwt_expiry_and_validation: true;
+    readonly require_no_sensitive_data_in_jwt: true;
+    readonly require_cors_review_for_api_changes: true;
+    readonly require_database_migrations_for_schema_changes: true;
+    readonly require_dependency_review: true;
+    readonly require_tests_for_new_behavior: true;
+    readonly require_observability_notes_for_production_paths: true;
+    readonly require_cost_and_rate_limit_notes_for_ai_api_usage: true;
+};

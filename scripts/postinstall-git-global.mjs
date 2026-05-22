@@ -4,6 +4,7 @@ import {
   existsSync,
   lstatSync,
   mkdirSync,
+  readFileSync,
   realpathSync,
   renameSync,
   rmSync
@@ -49,7 +50,8 @@ const blockedNames = new Set([
   "coverage",
   ".npm-cache",
   ".pnpm-cache",
-  ".pnpm-data"
+  ".pnpm-data",
+  "node_modules"
 ]);
 
 rmSync(stagingPath, { force: true, recursive: true });
@@ -69,16 +71,31 @@ cpSync(root, stagingPath, {
 rmSync(globalPackagePath, { force: true });
 renameSync(stagingPath, globalPackagePath);
 
-const result = spawnSync(
-  "npm",
-  ["install", "--omit=dev", "--ignore-scripts", "--no-audit", "--no-fund", "--package-lock=false"],
-  {
-    cwd: globalPackagePath,
-    stdio: "inherit",
-    shell: false
-  }
+const packageJson = JSON.parse(readFileSync(join(globalPackagePath, "package.json"), "utf8"));
+const runtimeDependencySpecs = Object.entries(packageJson.dependencies ?? {}).map(
+  ([name, version]) => `${name}@${version}`
 );
 
-if (result.status !== 0) {
-  process.exit(result.status ?? 1);
+if (runtimeDependencySpecs.length > 0) {
+  const result = spawnSync(
+    "npm",
+    [
+      "install",
+      "--no-save",
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund",
+      "--package-lock=false",
+      ...runtimeDependencySpecs
+    ],
+    {
+      cwd: globalPackagePath,
+      stdio: "inherit",
+      shell: false
+    }
+  );
+
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1);
+  }
 }
